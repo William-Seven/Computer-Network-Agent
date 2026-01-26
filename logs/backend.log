@@ -1,0 +1,132 @@
+INFO:     Started server process [1453]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8111 (Press CTRL+C to quit)
+INFO:     127.0.0.1:39410 - "OPTIONS /chat HTTP/1.1" 200 OK
+🔑 使用火山引擎 Embeddings: doubao-embedding-vision-250615
+✅ RAG Engine 加载成功，路径: ./data/vector_store
+🧠 Core Agent 使用模型: doubao-seed-1-6-lite-251015
+🤖 Agent 思考中: 介绍一下实验一
+【检索结果】：[文档片段 1]: # 实验一：VLAN 基础配置与划分
+
+## 1. 实验目的
+- 理解虚拟局域网（VLAN）的基本概念和作用。
+- 掌握在交换机上创建 VLAN、划分端口的方法。
+- 掌握 Trunk 链路的配置方法，实现跨交换机的 VLAN 通信。
+
+## 2. 实验原理
+VLAN（Virtual Local Area Network）即虚拟局域网，是将一个物理的 LAN 在逻辑上划分成多个广播域的通信技术。VLAN 内的主机间可以直接通信，而 VLAN 间的主机通信必须通过三层路由设备。
+
+## 3. 实验步骤
+
+### 步骤 1：创建 VLAN
+在交换机 SwitchA 上创建 VLAN 10 和 VLAN 20。
+
+[文档片段 2]: # 实验二：OSPF 单区域路由配置
+
+## 1. 实验目的
+- 掌握 OSPF 协议的基本工作原理。
+- 掌握单区域 OSPF 的配置方法。
+- 学会查看 OSPF 邻居状态和路由表。
+
+## 2. 实验原理
+OSPF（Open Shortest Path First）是基于链路状态的内部网关协议。它通过 Dijkstra 算法计算最短路径。OSPF 网络必须有一个骨干区域（Area 0），所有非骨干区域必须与 Area 0 相连。
+
+## 3. 实验步骤
+
+### 步骤 1：配置接口 IP
+首先为路由器接口配置 IP 地址，并确保直连链路连通。
+
+```bash
+RouterA(config)# interface g0/0
+RouterA(config-if)# ip address 192.168.1.1 255.255.255.0
+RouterA(config-if)# no shutdown
+```
+
+### 步骤 2：启用 OSPF 进程
+在路由器上启用 OSPF，进程号（Process ID）本地有效，不同路由器可以不同。
+INFO:     127.0.0.1:39410 - "POST /chat HTTP/1.1" 200 OK
+🤖 Agent 思考中: 我想给吩咐
+【检索结果】：[文档片段 1]: ## 3. 实验步骤
+
+### 步骤 1：创建 VLAN
+在交换机 SwitchA 上创建 VLAN 10 和 VLAN 20。
+
+```bash
+SwitchA> enable
+SwitchA# configure terminal
+SwitchA(config)# vlan 10
+SwitchA(config-vlan)# name Sales
+SwitchA(config-vlan)# exit
+SwitchA(config)# vlan 20
+SwitchA(config-vlan)# name Engineer
+SwitchA(config-vlan)# exit
+```
+
+### 步骤 2：将端口划入 VLAN
+将接口 FastEthernet 0/1 划分到 VLAN 10，接口 0/2 划分到 VLAN 20。
+
+[文档片段 2]: # 实验一：VLAN 基础配置与划分
+
+## 1. 实验目的
+- 理解虚拟局域网（VLAN）的基本概念和作用。
+- 掌握在交换机上创建 VLAN、划分端口的方法。
+- 掌握 Trunk 链路的配置方法，实现跨交换机的 VLAN 通信。
+
+## 2. 实验原理
+VLAN（Virtual Local Area Network）即虚拟局域网，是将一个物理的 LAN 在逻辑上划分成多个广播域的通信技术。VLAN 内的主机间可以直接通信，而 VLAN 间的主机通信必须通过三层路由设备。
+
+## 3. 实验步骤
+
+### 步骤 1：创建 VLAN
+在交换机 SwitchA 上创建 VLAN 10 和 VLAN 20。
+INFO:     127.0.0.1:59510 - "POST /chat HTTP/1.1" 200 OK
+🤖 Agent 思考中: 我想给f3/0接口配置ip地址，给出配置命令
+【检索结果】：[文档片段 1]: # 实验三：NAT 网络地址转换配置
+
+## 1. 实验目的
+- 理解私有 IP 与公有 IP 的区别。
+- 掌握静态 NAT、动态 NAT 和 PAT（端口多路复用）的配置。
+
+## 2. 实验原理
+NAT（Network Address Translation）用于将内部私有网络地址转换为外部公有网络地址，解决 IPv4 地址枯竭问题。最常用的是 PAT（NAPT），允许多个内网主机共享一个公网 IP 上网。
+
+## 3. 实验步骤
+
+### 步骤 1：定义内外网接口
+首先需要指定哪些接口属于内部网络（Inside），哪些属于外部网络（Outside）。
+
+```bash
+Router(config)# interface g0/0
+Router(config-if)# ip nat inside
+Router(config-if)# exit
+
+Router(config)# interface g0/1
+Router(config-if)# ip nat outside
+Router(config-if)# exit
+```
+
+[文档片段 2]: # 实验二：OSPF 单区域路由配置
+
+## 1. 实验目的
+- 掌握 OSPF 协议的基本工作原理。
+- 掌握单区域 OSPF 的配置方法。
+- 学会查看 OSPF 邻居状态和路由表。
+
+## 2. 实验原理
+OSPF（Open Shortest Path First）是基于链路状态的内部网关协议。它通过 Dijkstra 算法计算最短路径。OSPF 网络必须有一个骨干区域（Area 0），所有非骨干区域必须与 Area 0 相连。
+
+## 3. 实验步骤
+
+### 步骤 1：配置接口 IP
+首先为路由器接口配置 IP 地址，并确保直连链路连通。
+
+```bash
+RouterA(config)# interface g0/0
+RouterA(config-if)# ip address 192.168.1.1 255.255.255.0
+RouterA(config-if)# no shutdown
+```
+
+### 步骤 2：启用 OSPF 进程
+在路由器上启用 OSPF，进程号（Process ID）本地有效，不同路由器可以不同。
+INFO:     127.0.0.1:59512 - "POST /chat HTTP/1.1" 200 OK
