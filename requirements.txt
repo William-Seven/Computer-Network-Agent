@@ -1,0 +1,19 @@
+# 核心框架
+langchain
+langchain-community
+langchain-openai
+langchain_chroma
+
+# Web 服务
+fastapi
+uvicorn
+python-dotenv
+
+# 向量数据库与 Embeddings
+chromadb
+openai
+
+# 文档处理
+pypdf
+unstructured
+markdown

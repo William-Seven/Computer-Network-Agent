@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>计算机网络实践辅导系统</title>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --bg-color: #f3f4f6;
+            --chat-bg: #ffffff;
+            --user-msg-bg: #2563eb;
+            --bot-msg-bg: #f1f5f9;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            display: flex;
+            height: 100vh;
+        }
+
+        .sidebar {
+            width: 260px;
+            background-color: #1e293b;
+            color: white;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar h2 {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .exp-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .exp-list li {
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-bottom: 5px;
+            opacity: 0.8;
+        }
+
+        .exp-list li:hover, .exp-list li.active {
+            background-color: #334155;
+            opacity: 1;
+        }
+
+        .main-chat {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--chat-bg);
+            max-width: 1000px;
+            margin: 0 auto;
+            box-shadow: 0 0 20px rgba(0,0,0,0.05);
+        }
+
+        .chat-header {
+            padding: 20px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-container {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .message {
+            display: flex;
+            align-items: flex-start;
+            max-width: 80%;
+            gap: 12px;
+        }
+
+        .message.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .message.bot .avatar { background-color: #e2e8f0; }
+        .message.user .avatar { background-color: #dbeafe; }
+
+        .bubble {
+            padding: 12px 16px;
+            border-radius: 12px;
+            line-height: 1.5;
+            position: relative;
+            word-wrap: break-word;
+        }
+
+        .message.bot .bubble {
+            background-color: var(--bot-msg-bg);
+            color: #1e293b;
+            border-top-left-radius: 4px;
+        }
+
+        .message.user .bubble {
+            background-color: var(--user-msg-bg);
+            color: white;
+            border-top-right-radius: 4px;
+        }
+
+        .input-area {
+            padding: 20px;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            gap: 10px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            outline: none;
+            font-size: 1rem;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+        }
+
+        button {
+            padding: 12px 24px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background-color: #1d4ed8;
+        }
+        
+        button:disabled {
+            background-color: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        /* 简单的 Markdown 样式 */
+        .bubble pre {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 10px;
+            border-radius: 6px;
+            overflow-x: auto;
+        }
+        .bubble code {
+            font-family: Consolas, Monaco, monospace;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h2>🎓 实验导航</h2>
+        <ul class="exp-list">
+            <li class="active" onclick="selectExp('Lab 1: VLAN 基础配置')">Lab 1: VLAN 基础配置</li>
+            <li onclick="selectExp('Lab 2: OSPF 动态路由')">Lab 2: OSPF 动态路由</li>
+            <li onclick="selectExp('Lab 3: ACL 访问控制')">Lab 3: ACL 访问控制</li>
+            <li onclick="selectExp('Lab 4: NAT 网络地址转换')">Lab 4: NAT 网络地址转换</li>
+        </ul>
+        <div style="margin-top: auto; font-size: 0.8rem; opacity: 0.6;">
+            Session ID: <br><span id="sessionId">init...</span>
+        </div>
+    </div>
+
+    <div class="main-chat">
+        <div class="chat-header">
+            <h3 id="currentExp">Lab 1: VLAN 基础配置</h3>
+            <button onclick="clearChat()" style="padding: 6px 12px; font-size: 0.9rem; background: #64748b;">清空对话</button>
+        </div>
+
+        <div class="chat-container" id="chatContainer">
+            <div class="message bot">
+                <div class="avatar">🤖</div>
+                <div class="bubble">你好！我是你的计算机网络实验助教。遇到什么问题了吗？</div>
+            </div>
+        </div>
+
+        <div class="input-area">
+            <input type="text" id="userInput" placeholder="输入你的问题，例如：如何配置 VLAN？" onkeypress="handleKeyPress(event)">
+            <button onclick="sendMessage()" id="sendBtn">发送</button>
+        </div>
+    </div>
+
+    <script>
+        // 生成随机 Session ID
+        const sessionId = 'sess_' + Math.random().toString(36).substr(2, 9);
+        document.getElementById('sessionId').innerText = sessionId;
+
+        function selectExp(name) {
+            document.querySelectorAll('.exp-list li').forEach(li => li.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('currentExp').innerText = name;
+            addMessage('bot', `已切换到上下文：${name}`);
+        }
+
+        function handleKeyPress(e) {
+            if (e.key === 'Enter') sendMessage();
+        }
+
+        function clearChat() {
+            document.getElementById('chatContainer').innerHTML = `
+                <div class="message bot">
+                    <div class="avatar">🤖</div>
+                    <div class="bubble">对话已清空。有什么新问题吗？</div>
+                </div>
+            `;
+        }
+
+        function addMessage(role, text) {
+            const container = document.getElementById('chatContainer');
+            const div = document.createElement('div');
+            div.className = `message ${role}`;
+            
+            // 简单的换行处理
+            const formattedText = text.replace(/\n/g, '<br>');
+            
+            div.innerHTML = `
+                <div class="avatar">${role === 'bot' ? '🤖' : '👨‍🎓'}</div>
+                <div class="bubble">${formattedText}</div>
+            `;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            const btn = document.getElementById('sendBtn');
+            const text = input.value.trim();
+            
+            if (!text) return;
+
+            // UI 更新
+            addMessage('user', text);
+            input.value = '';
+            input.disabled = true;
+            btn.disabled = true;
+            btn.innerText = '思考中...';
+
+            try {
+                // 指向后端 8111 端口
+                const response = await fetch('http://localhost:8111/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        session_id: sessionId,
+                        query: text
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    addMessage('bot', data.reply);
+                } else {
+                    addMessage('bot', '❌ 服务器错误，请稍后再试。');
+                }
+            } catch (error) {
+                addMessage('bot', `❌ 网络错误: ${error.message}`);
+            } finally {
+                input.disabled = false;
+                btn.disabled = false;
+                btn.innerText = '发送';
+                input.focus();
+            }
+        }
+    </script>
+</body>
+</html>
