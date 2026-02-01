@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from src.core.agent import CoreAgent
+from src.memory.memory_manager import MemoryManager
 
 app = FastAPI(title="CN-Agent API", description="计算机网络实践辅导系统后端接口")
 
@@ -50,6 +51,43 @@ def chat_endpoint(request: ChatRequest):
         return ChatResponse(session_id=session_id, reply=reply)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/chat/history")
+def get_history(session_id: str):
+    """
+    获取指定 Session 的历史记录
+    优化：直接使用 MemoryManager 读取文件，避免加载重量级的 CoreAgent/RAG
+    """
+    # 1. 如果 Agent 在内存中，直接从内存读取（最新状态）
+    if session_id in agents:
+        return {"history": agents[session_id].memory.chat_history}
+    
+    # 2. 如果不在内存中，仅实例化轻量级的 MemoryManager 读取文件
+    try:
+        memory = MemoryManager(session_id)
+        return {"history": memory.chat_history}
+    except Exception as e:
+        # 如果文件损坏或读取失败，返回空列表
+        return {"history": []}
+
+@app.delete("/chat/history")
+def clear_history(session_id: str):
+    """
+    清空指定 Session 的历史记录（包括物理文件）
+    """
+    # 1. 尝试从活动实例中清理
+    if session_id in agents:
+        agents[session_id].memory.clear()
+        del agents[session_id]
+        return {"status": "success", "message": f"Session {session_id} history cleared and file deleted."}
+    
+    # 2. 如果不在内存中，创建一个临时 MemoryManager 来执行清理
+    try:
+        memory = MemoryManager(session_id)
+        memory.clear()
+        return {"status": "success", "message": f"Session {session_id} history file deleted (agent was not active)."}
+    except Exception as e:
+        return {"status": "error", "message": f"Failed to clear history: {str(e)}"}
 
 if __name__ == "__main__":
     import uvicorn

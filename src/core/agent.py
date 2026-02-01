@@ -42,8 +42,13 @@ class CoreAgent:
         处理用户交互
         """
         # 1. 获取上下文
-        # history = self.memory.get_context() # 暂未直接传给 LLM，可视需求格式化为 history string
-        
+        history_msgs = self.memory.get_context() 
+        # 将历史记录格式化为文本，以便插入 Prompt (也可以使用 MessagesPlaceholder，这里用文本简单拼接)
+        chat_history_str = ""
+        for msg in history_msgs:
+            role = "学生" if msg["role"] == "user" else "助教"
+            chat_history_str += f"{role}: {msg['content']}\n"
+
         # 2. RAG 检索
         print(f"🤖 Agent 思考中: {user_query}")
         context = self.rag.retrieve(user_query, 2)
@@ -54,18 +59,25 @@ class CoreAgent:
             try:
                 # 定义 Prompt
                 prompt = ChatPromptTemplate.from_template("""
-                你是一个专业的计算机网络实验辅导助教。请根据以下参考资料回答学生的问题。
+                你是一个专业的计算机网络实验辅导助教。请根据以下参考资料和对话历史回答学生的问题。
                 如果参考资料中没有答案，请基于你的专业知识回答，但要告知学生这不在实验手册中。
-                
+
                 参考资料 (知识库):
                 {context}
-                
+
+                对话历史:
+                {chat_history}
+
                 学生问题: {query}
                 """)
                 
                 # LCEL 链
                 chain = prompt | self.llm | StrOutputParser()
-                response = chain.invoke({"context": context, "query": user_query})
+                response = chain.invoke({
+                    "context": context, 
+                    "chat_history": chat_history_str,
+                    "query": user_query
+                })
                 
             except Exception as e:
                 response = f"❌ 模型调用失败: {str(e)}"

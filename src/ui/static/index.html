@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>计算机网络实践辅导系统</title>
+    <!-- 引入 Markdown 解析库 -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         :root {
             --primary-color: #2563eb;
@@ -171,17 +173,62 @@
             cursor: not-allowed;
         }
 
-        /* 简单的 Markdown 样式 */
+        /* 完善的 Markdown 样式 */
+        .bubble {
+            font-size: 0.95rem;
+        }
+        .bubble p {
+            margin: 0 0 10px 0;
+        }
+        .bubble p:last-child {
+            margin-bottom: 0;
+        }
         .bubble pre {
             background: #1e293b;
             color: #e2e8f0;
-            padding: 10px;
+            padding: 12px;
             border-radius: 6px;
             overflow-x: auto;
+            margin: 10px 0;
         }
         .bubble code {
-            font-family: Consolas, Monaco, monospace;
+            font-family: Consolas, Monaco, "Courier New", monospace;
             font-size: 0.9em;
+            background: rgba(0,0,0,0.1);
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+        .bubble pre code {
+            background: transparent;
+            padding: 0;
+            color: inherit;
+        }
+        .bubble ul, .bubble ol {
+            padding-left: 20px;
+            margin: 10px 0;
+        }
+        .bubble li {
+            margin-bottom: 4px;
+        }
+        .bubble blockquote {
+            border-left: 4px solid #cbd5e1;
+            margin: 10px 0;
+            padding-left: 10px;
+            color: #64748b;
+        }
+        .bubble strong {
+            font-weight: 600;
+        }
+        .bubble a {
+            color: var(--primary-color);
+            text-decoration: underline;
+        }
+        /* 用户消息是深色背景，调整代码块样式 */
+        .message.user .bubble code {
+            background: rgba(255,255,255,0.2);
+        }
+        .message.user .bubble a {
+            color: #e0f2fe;
         }
     </style>
 </head>
@@ -219,15 +266,82 @@
     </div>
 
     <script>
-        // 生成随机 Session ID
-        const sessionId = 'sess_' + Math.random().toString(36).substr(2, 9);
-        document.getElementById('sessionId').innerText = sessionId;
+        // 生成一个持久的 Base Session ID（实际项目中应来自用户登录信息）
+        // 这里为了演示，如果 localStorage 有就用，没有就生成一个存起来
+        let baseSessionId = localStorage.getItem('cn_agent_base_id');
+        if (!baseSessionId) {
+            baseSessionId = 'sess_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('cn_agent_base_id', baseSessionId);
+        }
 
-        function selectExp(name) {
+        // 当前实验 ID 映射
+        const labMap = {
+            'Lab 1: VLAN 基础配置': 'lab01',
+            'Lab 2: OSPF 动态路由': 'lab02',
+            'Lab 3: ACL 访问控制': 'lab03',
+            'Lab 4: NAT 网络地址转换': 'lab04'
+        };
+
+        let currentLabKey = 'lab01';
+        let currentSessionId = `${baseSessionId}_${currentLabKey}`;
+
+        // 初始化显示
+        updateSessionDisplay();
+        // 尝试加载 Lab 1 的历史
+        loadHistory();
+
+        function updateSessionDisplay() {
+            document.getElementById('sessionId').innerText = currentSessionId;
+        }
+
+        async function selectExp(name) {
+            // 1. UI 激活状态切换
             document.querySelectorAll('.exp-list li').forEach(li => li.classList.remove('active'));
             event.target.classList.add('active');
             document.getElementById('currentExp').innerText = name;
-            addMessage('bot', `已切换到上下文：${name}`);
+
+            // 2. 切换 Session ID
+            currentLabKey = labMap[name] || 'general';
+            currentSessionId = `${baseSessionId}_${currentLabKey}`;
+            updateSessionDisplay();
+
+            // 3. 清空当前视图并加载新历史
+            document.getElementById('chatContainer').innerHTML = '';
+            // 显示正在加载提示（可选）
+            addMessage('bot', `🔄 正在切换到 ${name}...`);
+            
+            await loadHistory();
+        }
+
+        async function loadHistory() {
+            try {
+                const response = await fetch(`http://localhost:8111/chat/history?session_id=${currentSessionId}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    const history = data.history || [];
+                    
+                    // 清空“正在切换”的提示，重新渲染完整历史
+                    document.getElementById('chatContainer').innerHTML = '';
+                    
+                    if (history.length === 0) {
+                        // 如果没有历史，显示默认欢迎语
+                        addMessage('bot', `你好！我是你的 ${document.getElementById('currentExp').innerText} 实验助教。有什么问题吗？`);
+                    } else {
+                        // 渲染历史记录
+                        history.forEach(msg => {
+                            // role: "user" | "assistant" -> 转换一下
+                            const role = msg.role === 'user' ? 'user' : 'bot';
+                            addMessage(role, msg.content);
+                        });
+                        // 滚动到底部
+                        const container = document.getElementById('chatContainer');
+                        container.scrollTop = container.scrollHeight;
+                    }
+                }
+            } catch (e) {
+                console.error("加载历史失败", e);
+                addMessage('bot', '⚠️ 加载历史记录失败，请检查后端服务。');
+            }
         }
 
         function handleKeyPress(e) {
@@ -248,8 +362,19 @@
             const div = document.createElement('div');
             div.className = `message ${role}`;
             
-            // 简单的换行处理
-            const formattedText = text.replace(/\n/g, '<br>');
+            // 使用 marked 解析 Markdown
+            let formattedText = text;
+            try {
+                if (typeof marked !== 'undefined') {
+                    formattedText = marked.parse(text);
+                } else {
+                    // 降级处理
+                    formattedText = text.replace(/\n/g, '<br>');
+                }
+            } catch (e) {
+                console.error("Markdown parse error:", e);
+                formattedText = text.replace(/\n/g, '<br>');
+            }
             
             div.innerHTML = `
                 <div class="avatar">${role === 'bot' ? '🤖' : '👨‍🎓'}</div>
@@ -279,7 +404,7 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        session_id: sessionId,
+                        session_id: currentSessionId, // 使用当前动态的 Session ID
                         query: text
                     })
                 });

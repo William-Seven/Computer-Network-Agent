@@ -2,14 +2,23 @@
 
 基于 **LangChain** 智能体架构的计算机网络实验辅导系统，采用 **前后端分离** 模式开发。
 
+## ✨ 核心特性
+
+- **📚 智能 RAG 问答**：基于 LangChain + ChromaDB，精准检索计算机网络实验文档。
+- **🧠 持久化记忆**：支持多轮对话，对话记录自动保存至本地 JSON 文件，服务重启不丢失。
+- **🔄 多上下文切换**：针对不同实验（VLAN、OSPF、ACL等）自动隔离对话上下文，互不干扰。
+- **🎨 Markdown 渲染**：前端支持代码高亮、列表、粗体等富文本显示，提升阅读体验。
+- **⚡️ 高性能架构**：前后端分离，历史记录读取接口经过专门优化，毫秒级响应。
+
 ## 🏗️ 架构设计
 
 ### 1. 核心技术栈
 - **环境管理**: Conda (Python 3.11)
 - **Agent 框架**: LangChain (ReAct / OpenAI Functions)
 - **后端服务**: FastAPI (Port 8111)
-- **前端架构**: 原生 HTML/JS SPA (Port 8222)
+- **前端架构**: 原生 HTML/JS SPA (Port 8222) + Marked.js
 - **向量数据库**: ChromaDB
+- **数据存储**: 本地 JSON 文件系统 (Session Persistence)
 
 ### 2. 端口规划
 | 服务     | 端口     | 说明                                    |
@@ -57,25 +66,39 @@ chmod +x start.sh
 ```
 cn-agent/
 ├── src/
-│   ├── core/           # Agent 逻辑
-│   ├── rag/            # 知识库逻辑
+│   ├── core/           # Agent 逻辑 (CoreAgent)
+│   ├── rag/            # 知识库引擎 (RAGEngine)
+│   ├── memory/         # 记忆管理 (MemoryManager)
 │   ├── api/            # 后端 API (main.py)
 │   └── ui/
-│       └── static/     # 前端静态资源 (index.html)
-├── data/docs/          # 原始实验文档
+│       └── static/     # 前端静态资源 (index.html + marked.js)
+├── data/
+│   ├── docs/           # 原始实验文档 (Markdown/PDF)
+│   ├── vector_store/   # ChromaDB 向量数据库
+│   └── sessions/       # [NEW] 对话历史存档 (*.json)
 ├── scripts/            # 数据处理脚本
 ├── requirements.txt    # 项目依赖
 └── start.sh            # 启动脚本
 ```
 
-# todo
+## 🔌 API 接口说明
+
+| 方法 | 路径 | 说明 |
+| --- | --- | --- |
+| POST | `/chat` | 发送对话请求，返回智能回复 |
+| GET | `/chat/history` | 获取指定 Session 的历史记录 (高性能优化) |
+| DELETE | `/chat/history` | 清空指定 Session 的内存及文件存档 |
+
+# ✅ 已完成功能
+- [x] 基础 RAG 问答流程
+- [x] 历史记录与对话记忆 (基于文件持久化)
+- [x] 多实验上下文隔离与切换
+- [x] 前端 Markdown 渲染与代码高亮
+- [x] 后端性能优化 (MemoryManager 解耦)
+
+# 📝 TODO
 - 测试大模型能力边界
-
 - 辅导配置步骤+原理讲解，详细讲解，最后补充引申
-
 - 实际案例，商业场景应用
-
-- 用户管理、数据库
-
-- 历史记录，对话记忆
+- 用户管理、数据库集成 (SQLite/PostgreSQL)
 
