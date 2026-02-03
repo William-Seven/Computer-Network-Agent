@@ -17,3 +17,5 @@ openai
 pypdf
 unstructured
 markdown
+python-docx
+python-pptx

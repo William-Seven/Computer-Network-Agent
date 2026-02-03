@@ -7,7 +7,9 @@ load_dotenv()
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-from langchain_community.document_loaders import DirectoryLoader, TextLoader, PyPDFLoader
+from langchain_community.document_loaders import DirectoryLoader, TextLoader, Docx2txtLoader
+from src.rag.ppt_loader import SimplePPTXLoader
+from src.rag.pdf_loader import MultimodalPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_chroma import Chroma
 from langchain_community.embeddings import FakeEmbeddings
@@ -29,18 +31,44 @@ class VolcArkEmbeddings(Embeddings):
         self.model = model
 
     def embed_documents(self, texts: list) -> list:
+        """
+        支持文本和图片的混合列表。
+        如果是图片路径（以 image: 开头），则读取图片并进行 Base64 编码发送。
+        """
+        import base64
+
         embeddings = []
         for t in texts:
-            inputs = [{"type": "text", "text": str(t)}]
-            resp = self.client.multimodal_embeddings.create(
-                model=self.model,
-                input=inputs
-            )
-            # 兼容 resp.data 直接是对象的情况
-            if hasattr(resp, "data") and hasattr(resp.data, "embedding"):
-                embeddings.append(resp.data.embedding)
+            # 简单的多模态协议：如果文本以 "image:" 开头，则视为图片路径
+            if str(t).startswith("image:") and os.path.exists(str(t)[6:]):
+                image_path = str(t)[6:].strip()
+                try:
+                    with open(image_path, "rb") as image_file:
+                        encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
+                    inputs = [{"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{encoded_string}"}}]
+                    print(f"🖼️ 正在向量化图片: {image_path}")
+                except Exception as e:
+                    print(f"⚠️ 图片读取失败 {image_path}: {e}, 降级为纯文本处理")
+                    inputs = [{"type": "text", "text": str(t)}]
             else:
-                raise ValueError(f"Unexpected response structure: {resp}")
+                # 普通文本
+                inputs = [{"type": "text", "text": str(t)}]
+
+            try:
+                resp = self.client.multimodal_embeddings.create(
+                    model=self.model,
+                    input=inputs
+                )
+                # 兼容 resp.data 直接是对象的情况
+                if hasattr(resp, "data") and hasattr(resp.data, "embedding"):
+                    embeddings.append(resp.data.embedding)
+                else:
+                    raise ValueError(f"Unexpected response structure: {resp}")
+            except Exception as e:
+                print(f"❌ Embedding API Error for input '{str(t)[:50]}...': {e}")
+                # 发生错误时填充零向量或跳过，这里选择抛出以便调试
+                raise e
+                
         return embeddings
 
     def embed_query(self, text: str) -> list:
@@ -54,25 +82,41 @@ class VolcArkEmbeddings(Embeddings):
         else:
             raise ValueError(f"Unexpected response structure: {resp}")
 
+import shutil
+
 def ingest_docs():
     docs_path = "./data/docs"
     db_path = "./data/vector_store"
 
+    # 0. 清理旧向量库 (确保全量重建)
+    if os.path.exists(db_path):
+        print(f"🧹 清理旧向量库: {db_path}")
+        shutil.rmtree(db_path)
+    
     print(f"🚀 开始构建知识库，源目录: {docs_path}")
 
     # 1. 加载文档
     loaders = [
+        # Markdown
         DirectoryLoader(docs_path, glob="**/*.md", loader_cls=TextLoader),
-        # 如需支持 PDF，取消注释下一行
-        # DirectoryLoader(docs_path, glob="**/*.pdf", loader_cls=PyPDFLoader),
+        # PDF (多模态) - 禁用多线程以确保图片提取日志可见且不冲突
+        DirectoryLoader(docs_path, glob="**/*.pdf", loader_cls=MultimodalPDFLoader, use_multithreading=False),
+        # Word (.docx)
+        DirectoryLoader(docs_path, glob="**/*.docx", loader_cls=Docx2txtLoader),
+        # PPT (.pptx) - 使用自定义轻量级 Loader
+        DirectoryLoader(docs_path, glob="**/*.pptx", loader_cls=SimplePPTXLoader),
     ]
 
     documents = []
+    print(f"🔍 正在扫描文档 (md, pdf, docx, pptx)...")
     for loader in loaders:
         try:
-            documents.extend(loader.load())
+            loaded_docs = loader.load()
+            if loaded_docs:
+                print(f"  - 发现 {len(loaded_docs)} 个文档来自 {loader.loader_cls.__name__}")
+                documents.extend(loaded_docs)
         except Exception as e:
-            print(f"⚠️ 加载部分文档失败: {e}")
+            print(f"⚠️ {loader.loader_cls.__name__} 加载失败或无匹配文件: {e}")
 
     if not documents:
         print("❌ 未找到有效文档，请检查 data/docs/ 目录")
@@ -81,7 +125,7 @@ def ingest_docs():
     print(f"📄 加载了 {len(documents)} 个文档")
 
     # 2. 文本切分
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=100)
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=800, chunk_overlap=200)
     splits = text_splitter.split_documents(documents)
     print(f"✂️ 切分为 {len(splits)} 个文本块")
 

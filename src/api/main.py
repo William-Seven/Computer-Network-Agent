@@ -3,8 +3,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from src.core.agent import CoreAgent
 from src.memory.memory_manager import MemoryManager
+from src.core.auth import AuthManager
 
 app = FastAPI(title="CN-Agent API", description="计算机网络实践辅导系统后端接口")
+auth_manager = AuthManager()
 
 # 配置 CORS，允许前端(8222)跨域访问
 app.add_middleware(
@@ -31,6 +33,31 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     reply: str
     session_id: str
+
+class AuthRequest(BaseModel):
+    student_id: str
+    password: str
+
+
+@app.post("/auth/register")
+def register(request: AuthRequest):
+    """
+    用户注册接口
+    """
+    result = auth_manager.register(request.student_id, request.password)
+    if not result["success"]:
+        raise HTTPException(status_code=400, detail=result["message"])
+    return result
+
+@app.post("/auth/login")
+def login(request: AuthRequest):
+    """
+    用户登录接口
+    """
+    result = auth_manager.login(request.student_id, request.password)
+    if not result["success"]:
+        raise HTTPException(status_code=401, detail=result["message"])
+    return result
 
 
 @app.post("/chat", response_model=ChatResponse)

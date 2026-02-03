@@ -1,3 +1,9 @@
 logs/
+*.log
+
+data/assets
 data/vector_store/
 data/sessions/
+data/*.json
+
+.env
