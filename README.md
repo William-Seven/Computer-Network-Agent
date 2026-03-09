@@ -6,6 +6,7 @@
 
 - **📚 多格式 RAG 问答**：支持 **Markdown、PDF、Word、PPT** 多种格式文档的解析与检索，知识库构建更加灵活。
 - **👁️ 多模态视觉感知**：自动从 PDF 中提取图片并进行向量化，Agent 能够结合图片内容（如网络拓扑图、实验结果截图）回答问题。
+- **🌐 智能联网搜索**：内置 Tool Calling 工具调用机制，当本地实验指导书知识库无法命中或涉及前沿资讯时，Agent 会自动调用 DuckDuckGo 搜索引擎获取最新网络数据补充解答。
 - **🧠 持久化记忆**：支持多轮对话，对话记录自动保存至本地 JSON 文件，服务重启不丢失。
 - **🔐 用户身份认证**：内置轻量级账号系统，支持学生注册/登录，保障学习数据的私密性与安全性。
 - **🔄 智能会话隔离**：基于`学号 + 实验ID`的双重维度隔离对话历史，支持跨设备同步学习进度。
@@ -74,11 +75,13 @@ cn-agent/
 ├── src/
 │   ├── core/           
 │   │   ├── agent.py    # Agent 核心逻辑
-│   │   └── auth.py     # [NEW] 用户认证管理
+│   │   └── auth.py     # 用户认证管理
 │   ├── rag/            # 知识库引擎 (RAGEngine + Loaders)
-│   │   ├── pdf_loader.py  # [NEW] 多模态 PDF 加载器
+│   │   ├── pdf_loader.py  # 多模态 PDF 加载器
 │   │   └── rag_engine.py  # 核心检索逻辑
 │   ├── memory/         # 记忆管理 (MemoryManager)
+│   ├── tools/          # [NEW] 工具链封装
+│   │   └── search_tool.py # 联网搜索引擎工具
 │   ├── api/            # 后端 API (main.py)
 │   └── ui/
 │       └── static/     # 前端静态资源 (index.html + marked.js)
@@ -111,10 +114,10 @@ cn-agent/
 - [x] 前端 Markdown 渲染与代码高亮
 - [x] 后端性能优化 (MemoryManager 解耦)
 - [x] **多模态支持** (自动提取并理解文档插图)
+- [x] **智能联网搜索** (Agent Tool Calling 动态调用搜索引擎补充前沿知识)
 
 # 📝 TODO
 - 测试大模型能力边界
 - 辅导配置步骤+原理讲解，详细讲解，最后补充引申
-- 实际案例，商业场景应用
 - 迁移至关系型数据库 (mysql)
 

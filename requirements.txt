@@ -19,3 +19,7 @@ unstructured
 markdown
 python-docx
 python-pptx
+
+# 搜索引擎
+duckduckgo-search
+ddgs

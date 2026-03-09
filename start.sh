@@ -3,6 +3,8 @@
 pkill -f "src/api/main.py"
 pkill -f "http.server 8222"
 
+sleep 5
+
 # 2. 环境变量与 Python 路径
 export PYTHONPATH=$PYTHONPATH:$(pwd)
 
