@@ -1,12 +1,15 @@
+# 忽略日志文件
 logs/
 *.log
 
+# 数据文件和会话文件
 data/assets
 data/vector_store/
 data/sessions/
 data/*.json
 data/*.pkl
 
+# 环境变量文件
 .env
 
 # Byte-compiled / optimized / DLL files
@@ -15,3 +18,6 @@ __pycache__/
 *.pyo
 *.pyd
 *.pyc
+
+# 测试脚本
+test/

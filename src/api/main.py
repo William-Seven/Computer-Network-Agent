@@ -31,10 +31,6 @@ class ChatRequest(BaseModel):
     session_id: str
     query: str
 
-class ChatResponse(BaseModel):
-    reply: str
-    session_id: str
-
 class AuthRequest(BaseModel):
     student_id: str
     password: str

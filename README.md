@@ -69,8 +69,7 @@ python3 scripts/ingest_docs.py
 使用一键启动脚本（分别轮询启动前后端）：
 ```bash
 chmod +x start.sh
-./start.sh start
-# 如果需要热更新可执行: ./start.sh restart
+./start.sh
 ```
 - 测试后端: `http://localhost:8111`
 - 访问前端: `http://localhost:8222`
@@ -94,6 +93,7 @@ cn-agent/
 |   |   └── main.py
 │   └── ui/
 │       └── static/     # 前端静态资源 (index.html)
+|
 ├── data/
 │   ├── docs/           # 原始实验文档 (Markdown/PDF/PPT/Word)
 │   ├── assets/         # 从文档提取的图片

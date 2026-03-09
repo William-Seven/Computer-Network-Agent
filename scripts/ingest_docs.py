@@ -42,7 +42,8 @@ class VolcArkEmbeddings(Embeddings):
         import base64
 
         embeddings = []
-        for t in texts:
+        total_texts = len(texts)
+        for idx, t in enumerate(texts):
             # 简单的多模态协议：如果文本以 "image:" 开头，则视为图片路径
             if str(t).startswith("image:") and os.path.exists(str(t)[6:]):
                 image_path = str(t)[6:].strip()
@@ -50,12 +51,13 @@ class VolcArkEmbeddings(Embeddings):
                     with open(image_path, "rb") as image_file:
                         encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
                     inputs = [{"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{encoded_string}"}}]
-                    print(f"🖼️ 正在向量化图片: {image_path}")
+                    print(f"[{idx + 1}/{total_texts}] 🖼️ 正在向量化图片: {image_path}")
                 except Exception as e:
-                    print(f"⚠️ 图片读取失败 {image_path}: {e}, 降级为纯文本处理")
+                    print(f"[{idx + 1}/{total_texts}] ⚠️ 图片读取失败 {image_path}: {e}, 降级为纯文本处理")
                     inputs = [{"type": "text", "text": str(t)}]
             else:
-                # 普通文本
+                # 普通文本，并打印此时是第几个文本块
+                print(f"[{idx + 1}/{total_texts}] 📝 正在向量化文本块... (长度: {len(str(t))})")
                 inputs = [{"type": "text", "text": str(t)}]
 
             try:
@@ -117,7 +119,7 @@ def ingest_docs():
         try:
             loaded_docs = loader.load()
             if loaded_docs:
-                print(f"  - 发现 {len(loaded_docs)} 个文档来自 {loader.loader_cls.__name__}")
+                print(f"  - 发现 {len(loaded_docs)} 页内容来自 {loader.loader_cls.__name__}")
                 documents.extend(loaded_docs)
         except Exception as e:
             print(f"⚠️ {loader.loader_cls.__name__} 加载失败或无匹配文件: {e}")

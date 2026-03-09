@@ -12,6 +12,12 @@ class MultimodalPDFLoader(PyPDFLoader):
         super().__init__(file_path)
         self.image_output_dir = image_output_dir
         os.makedirs(image_output_dir, exist_ok=True)
+        
+        # 定义全局配置：只有在下面列表中的文件才会提取图片并参与多模态
+        self.WHITELIST_PDFS_FOR_IMAGES = [
+            "实验三报告.pdf",
+            "实验四报告.pdf"
+        ]
 
     def lazy_load(self):
         """惰性加载 PDF，提取文本并在对应位置插入图片标记"""
@@ -20,13 +26,30 @@ class MultimodalPDFLoader(PyPDFLoader):
             print(f"📖 Processing PDF: {self.file_path}")
             reader = PdfReader(self.file_path)
             
+            # 判断当前 PDF 是否在白名单中
+            base_name = os.path.basename(self.file_path)
+            should_extract_images = False
+            for allowed in self.WHITELIST_PDFS_FOR_IMAGES:
+                if allowed in base_name:
+                    should_extract_images = True
+                    break
+            
+            if not self.WHITELIST_PDFS_FOR_IMAGES: 
+                # 这里如果你想默认什么都不提取，就设为False，或者你想默认提取指定的可以修改这里
+                pass
+                
+            if should_extract_images:
+                print(f"  ✨ PDF '{base_name}' 在图片提取白名单中，将进行图片解析。")
+            else:
+                print(f"  ⏭️ PDF '{base_name}' 不在白名单中，跳过所有图片提取逻辑。")
+
             for i, page in enumerate(reader.pages):
                 # 1. 提取文本
                 text = page.extract_text() or ""
                 
                 # 2. 提取图片
                 image_tags = []
-                if hasattr(page, "images"):
+                if should_extract_images and hasattr(page, "images"):
                     try:
                         # 注意：page.images 是一个属性，访问它会触发提取过程
                         images = page.images
@@ -49,14 +72,16 @@ class MultimodalPDFLoader(PyPDFLoader):
                                     with open(abs_img_path, "wb") as f:
                                         f.write(image_file_object.data)
                                     
-                                    # print(f"🖼️ Saved image: {img_filename}")
+                                    # 只有成功读取并保存，才作为有效地视觉标签记录
                                     image_tags.append(f"image:{img_rel_path}")
-                                except Exception as img_e:
-                                    print(f"⚠️ Failed to save image: {img_e}")
+                                except Exception:
+                                    # 跳过无法识别的图片格式，不考虑向量化
+                                    pass
                         else:
                             pass 
-                    except Exception as e:
-                         print(f"⚠️ Error accessing page.images on page {i+1}: {e}")
+                    except Exception:
+                         # 跳过无法访问 images 属性的页面 (如 jbig2dec 报错)
+                         pass
                 
                 # 3. 组合内容：文本 + 图片标记
                 if image_tags:
