@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from src.core.agent import CoreAgent
@@ -60,24 +61,24 @@ def login(request: AuthRequest):
     return result
 
 
-@app.post("/chat", response_model=ChatResponse)
-def chat_endpoint(request: ChatRequest):
+
+@app.post("/chat/stream")
+def chat_stream_endpoint(request: ChatRequest):
     """
-    智能答疑接口
+    智能答疑接口 (流式返回)
     """
     session_id = request.session_id
     
-    # 获取或创建 Agent 实例
     if session_id not in agents:
         agents[session_id] = CoreAgent(session_id)
-    
+        
     agent = agents[session_id]
     
-    try:
-        reply = agent.chat(request.query)
-        return ChatResponse(session_id=session_id, reply=reply)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    # 返回类型设置为 text/event-stream 或 application/x-ndjson
+    return StreamingResponse(
+        agent.chat_stream(request.query),
+        media_type="application/x-ndjson"
+    )
 
 @app.get("/chat/history")
 def get_history(session_id: str):

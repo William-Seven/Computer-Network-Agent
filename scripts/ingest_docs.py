@@ -1,5 +1,7 @@
 import os
 import sys
+import pickle
+from langchain_community.retrievers import BM25Retriever
 from dotenv import load_dotenv
 
 # 加载环境变量
@@ -14,6 +16,8 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_chroma import Chroma
 from langchain_community.embeddings import FakeEmbeddings
 from langchain_core.embeddings import Embeddings
+from langchain_community.retrievers import BM25Retriever
+import pickle
 
 # 火山引擎多模态嵌入
 try:
@@ -145,6 +149,16 @@ def ingest_docs():
         vectordb = Chroma.from_documents(documents=splits, embedding=embedding, persist_directory=db_path)
 
         print(f"✅ 向量库构建完成！存储路径: {db_path}")
+        # 4. 构建并保存 BM25 检索器 (用于混合检索)
+        print("🔍 正在构建 BM25 关键词索引...")
+        from src.rag.bm25_utils import jieba_preprocess
+        
+        bm25_retriever = BM25Retriever.from_documents(splits, preprocess_func=jieba_preprocess)
+        bm25_retriever.k = 4
+        bm25_path = "./data/bm25_index.pkl"
+        with open(bm25_path, "wb") as f:
+            pickle.dump(bm25_retriever, f)
+        print(f"✅ BM25 关键词索引保存成功！路径: {bm25_path}")
     except Exception as e:
         print(f"❌ 向量化失败: {e}")
 

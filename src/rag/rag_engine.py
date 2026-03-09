@@ -2,9 +2,18 @@ from typing import List
 from langchain_chroma import Chroma
 from langchain_community.embeddings import FakeEmbeddings
 from langchain_core.embeddings import Embeddings
+from langchain_community.retrievers import BM25Retriever
 from dotenv import load_dotenv
 import os
 import base64
+import pickle
+import sys
+
+# 显式导入自定义结巴分词模块，确保 pickle 反序列化时能找到命名空间
+try:
+    from src.rag.bm25_utils import jieba_preprocess
+except ImportError:
+    pass
 
 # 加载环境变量
 load_dotenv()
@@ -89,19 +98,81 @@ class RAGEngine:
 
             self.vector_store = Chroma(persist_directory=db_path, embedding_function=self.embedding)
             print(f"✅ RAG Engine 加载成功，路径: {db_path}")
+            
+            # 加载 BM25 检索器
+            bm25_path = "./data/bm25_index.pkl"
+            if os.path.exists(bm25_path):
+                with open(bm25_path, "rb") as f:
+                    self.bm25_retriever = pickle.load(f)
+                print("✅ BM25 关键词检索器加载成功！")
+            else:
+                print("⚠️ 未找到 BM25 索引文件，将退化为纯向量检索。")
+                self.bm25_retriever = None
+
         except Exception as e:
             print(f"⚠️ RAG Engine 初始化失败: {e}")
             self.vector_store = None
+            self.bm25_retriever = None
 
     def retrieve(self, query: str, top_k: int = 3) -> str:
         if not self.vector_store:
             return "【系统提示】知识库未初始化，无法检索。"
         try:
-            # 对用户 Query 生成嵌入向量
-            query_embedding = self.embedding.embed_query(query)
-
-            # 在向量库中进行检索
-            docs = self.vector_store.similarity_search_by_vector(query_embedding, k=top_k)
+            print(f"🔍 收到检索请求: {query}")
+            
+            # 如果加载了 BM25，则使用 Hybrid Search
+            if self.bm25_retriever:
+                # 1. 向量检索召回
+                print("🧪 正在执行混合检索(Vector + BM25)...")
+                query_embedding = self.embedding.embed_query(query)
+                vector_docs = self.vector_store.similarity_search_by_vector(query_embedding, k=top_k)
+                
+                # 2. BM25 关键词检索召回
+                self.bm25_retriever.k = top_k
+                bm25_docs = self.bm25_retriever.invoke(query)
+                
+                # 3. RRF (Reciprocal Rank Fusion) 倒数排序融合算法
+                k = 60
+                rrf_scores = {}
+                doc_map = {}
+                source_tracker = {} # 记录片段来源：'Vector', 'BM25', 或 'Both'
+                
+                print(f"📊 Vector召回数量: {len(vector_docs)} | BM25召回数量: {len(bm25_docs)}")
+                
+                for rank, doc in enumerate(vector_docs):
+                    text = doc.page_content
+                    # 向量检索得分
+                    rrf_scores[text] = rrf_scores.get(text, 0) + 1.0 / (k + rank + 1)
+                    doc_map[text] = doc
+                    source_tracker[text] = "Vector"
+                    
+                for rank, doc in enumerate(bm25_docs):
+                    text = doc.page_content
+                    # BM25 检索得分
+                    rrf_scores[text] = rrf_scores.get(text, 0) + 1.0 / (k + rank + 1)
+                    doc_map[text] = doc
+                    if text in source_tracker:
+                        source_tracker[text] = "Both (Vector+BM25)"
+                    else:
+                        source_tracker[text] = "BM25"
+                    
+                # 根据 RRF 得分降序排序
+                sorted_docs = sorted(doc_map.values(), key=lambda doc: rrf_scores[doc.page_content], reverse=True)
+                docs = sorted_docs[:top_k]
+                
+                print("--- 🏆 混合检索 (RRF) 最终得分详情 ---")
+                for i, doc in enumerate(docs):
+                    score = rrf_scores[doc.page_content]
+                    source = source_tracker[doc.page_content]
+                    snip = doc.page_content.replace('\n', ' ')[:50]
+                    print(f"TOP {i+1} | Source: {source: <18} | Score: {score:.5f} | Snippet: {snip}...")
+                print("----------------------------------------")
+                
+            else:
+                # 降级：仅使用纯向量检索
+                print("🧪 正在执行纯向量检索...")
+                query_embedding = self.embedding.embed_query(query)
+                docs = self.vector_store.similarity_search_by_vector(query_embedding, k=top_k)
 
             if not docs:
                 return "【系统提示】未检索到相关文档。"

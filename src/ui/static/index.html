@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -31,9 +32,12 @@
             padding: 20px;
             display: flex;
             flex-direction: column;
-            transition: all 0.3s ease; /* 添加过渡动画 */
-            white-space: nowrap;       /* 防止内容换行 */
-            overflow: hidden;          /* 隐藏溢出内容 */
+            transition: all 0.3s ease;
+            /* 添加过渡动画 */
+            white-space: nowrap;
+            /* 防止内容换行 */
+            overflow: hidden;
+            /* 隐藏溢出内容 */
         }
 
         .sidebar.collapsed {
@@ -65,7 +69,8 @@
             opacity: 0.8;
         }
 
-        .exp-list li:hover, .exp-list li.active {
+        .exp-list li:hover,
+        .exp-list li.active {
             background-color: #334155;
             opacity: 1;
         }
@@ -77,19 +82,22 @@
             background-color: var(--chat-bg);
             /* 移除最大宽度限制，使其占满剩余空间 */
             width: auto;
-            margin: 0; 
-            box-shadow: none; /* 去除阴影，因为已全屏 */
+            margin: 0;
+            box-shadow: none;
+            /* 去除阴影，因为已全屏 */
         }
 
         .chat-header {
-            padding: 8px 20px; /* 进一步压缩高度 */
+            padding: 8px 20px;
+            /* 进一步压缩高度 */
             border-bottom: 1px solid #e2e8f0;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            height: 40px; /* 固定高度，更稳定 */
+            height: 40px;
+            /* 固定高度，更稳定 */
         }
-        
+
         .header-left {
             display: flex;
             align-items: center;
@@ -117,7 +125,8 @@
 
         .chat-header h3 {
             margin: 0;
-            font-size: 1rem; /* 稍微减小字号 */
+            font-size: 1rem;
+            /* 稍微减小字号 */
             font-weight: 600;
         }
 
@@ -134,7 +143,7 @@
             display: flex;
             align-items: flex-start;
             /* 限制气泡最大宽度，保证阅读体验，避免单行文字过长 */
-            max-width: 900px; 
+            max-width: 900px;
             gap: 16px;
         }
 
@@ -144,26 +153,37 @@
         }
 
         .avatar {
-            width: 40px;    /* 稍微放大头像 */
+            width: 40px;
+            /* 稍微放大头像 */
             height: 40px;
-            border-radius: 8px; /* 改为圆角矩形，更现代 */
+            border-radius: 8px;
+            /* 改为圆角矩形，更现代 */
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 1.3rem;
-            flex-shrink: 0; /* 防止被压缩 */
+            flex-shrink: 0;
+            /* 防止被压缩 */
         }
 
-        .message.bot .avatar { background-color: #e2e8f0; }
-        .message.user .avatar { background-color: #dbeafe; }
+        .message.bot .avatar {
+            background-color: #e2e8f0;
+        }
+
+        .message.user .avatar {
+            background-color: #dbeafe;
+        }
 
         .bubble {
-            padding: 14px 18px; /* 增加内边距，呼吸感更强 */
+            padding: 14px 18px;
+            /* 增加内边距，呼吸感更强 */
             border-radius: 12px;
-            line-height: 1.6;   /* 增加行高，提升阅读体验 */
+            line-height: 1.6;
+            /* 增加行高，提升阅读体验 */
             position: relative;
             word-wrap: break-word;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05); /* 添加微弱阴影 */
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            /* 添加微弱阴影 */
         }
 
         .message.bot .bubble {
@@ -192,7 +212,8 @@
             border-radius: 10px;
             outline: none;
             font-size: 1rem;
-            background-color: #f8fafc; /* 浅灰背景，更有质感 */
+            background-color: #f8fafc;
+            /* 浅灰背景，更有质感 */
             transition: all 0.2s;
         }
 
@@ -215,28 +236,41 @@
         button:hover {
             background-color: #1d4ed8;
         }
-        
+
         button:disabled {
             background-color: #94a3b8;
             cursor: not-allowed;
         }
 
+        /* 流式状态消息样式 */
+        .status-msg {
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-top: 4px;
+            font-style: italic;
+        }
+
         /* 完善的 Markdown 样式 */
         .bubble {
-            font-size: 1rem; /* 增大正文字号 */
+            font-size: 1rem;
+            /* 增大正文字号 */
         }
+
         .bubble img {
             max-width: 100%;
             border-radius: 8px;
             margin: 10px 0;
             border: 1px solid #e2e8f0;
         }
+
         .bubble p {
             margin: 0 0 10px 0;
         }
+
         .bubble p:last-child {
             margin-bottom: 0;
         }
+
         .bubble pre {
             background: #1e293b;
             color: #e2e8f0;
@@ -245,42 +279,52 @@
             overflow-x: auto;
             margin: 10px 0;
         }
+
         .bubble code {
             font-family: Consolas, Monaco, "Courier New", monospace;
             font-size: 0.9em;
-            background: rgba(0,0,0,0.1);
+            background: rgba(0, 0, 0, 0.1);
             padding: 2px 4px;
             border-radius: 4px;
         }
+
         .bubble pre code {
             background: transparent;
             padding: 0;
             color: inherit;
         }
-        .bubble ul, .bubble ol {
+
+        .bubble ul,
+        .bubble ol {
             padding-left: 20px;
             margin: 10px 0;
         }
+
         .bubble li {
             margin-bottom: 4px;
         }
+
         .bubble blockquote {
             border-left: 4px solid #cbd5e1;
             margin: 10px 0;
             padding-left: 10px;
             color: #64748b;
         }
+
         .bubble strong {
             font-weight: 600;
         }
+
         .bubble a {
             color: var(--primary-color);
             text-decoration: underline;
         }
+
         /* 用户消息是深色背景，调整代码块样式 */
         .message.user .bubble code {
-            background: rgba(255,255,255,0.2);
+            background: rgba(255, 255, 255, 0.2);
         }
+
         .message.user .bubble a {
             color: #e0f2fe;
         }
@@ -303,7 +347,7 @@
             background: white;
             padding: 40px;
             border-radius: 16px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
             width: 360px;
             text-align: center;
         }
@@ -336,7 +380,7 @@
             font-size: 0.9rem;
             color: #64748b;
         }
-        
+
         .auth-switch a {
             color: var(--primary-color);
             cursor: pointer;
@@ -356,17 +400,19 @@
             width: 100%;
             border-radius: 6px;
         }
+
         .logout-btn:hover {
             background-color: #dc2626;
         }
     </style>
 </head>
+
 <body>
     <!-- 认证层 -->
     <div class="auth-overlay" id="authOverlay">
         <div class="auth-card">
             <h2 id="authTitle">学生登录</h2>
-            
+
             <!-- 登录表单 -->
             <div id="loginForm" class="auth-form">
                 <input type="text" id="loginId" placeholder="请输入10位学号" maxlength="10">
@@ -387,7 +433,7 @@
                     已有账号？<a onclick="showLogin()">去登录</a>
                 </div>
             </div>
-            
+
             <div id="authMsg" style="color: red; margin-top: 10px; font-size: 0.9rem;"></div>
         </div>
     </div>
@@ -442,7 +488,7 @@
         // 用户信息与会话管理
         let currentUser = null;
         let currentLabKey = 'lab01';
-        
+
         // 实验映射
         const labMap = {
             '实验1: 基本交换机配置': 'lab01',
@@ -461,7 +507,7 @@
         }
 
         // --- 认证逻辑 ---
-        
+
         function showRegister() {
             document.getElementById('loginForm').classList.add('hidden');
             document.getElementById('registerForm').classList.remove('hidden');
@@ -493,7 +539,7 @@
                     body: JSON.stringify({ student_id: id, password: pwd })
                 });
                 const data = await res.json();
-                
+
                 if (res.ok && data.success) {
                     // 登录成功
                     loginSuccess(id);
@@ -521,7 +567,7 @@
                     body: JSON.stringify({ student_id: id, password: pwd1 })
                 });
                 const data = await res.json();
-                
+
                 if (res.ok && data.success) {
                     alert("注册成功，请登录");
                     showLogin();
@@ -548,16 +594,16 @@
 
         function logout() {
             if (!confirm("确定要退出登录吗？")) return;
-            
+
             // 1. 清除本地存储
             localStorage.removeItem('cn_agent_user_id');
             currentUser = null;
-            
+
             // 2. 重置 UI
             document.getElementById('loginPwd').value = '';
             document.getElementById('authOverlay').classList.remove('hidden');
             showLogin();
-            
+
             // 3. 停止可能的请求或清空聊天区（可选，因为遮罩层挡住了）
             const container = document.getElementById('chatContainer');
             if (container) container.innerHTML = '';
@@ -582,7 +628,7 @@
 
         function updateSessionDisplay() {
             const sid = getSessionId();
-            if(sid) document.getElementById('sessionId').innerText = sid;
+            if (sid) document.getElementById('sessionId').innerText = sid;
         }
 
         async function selectExp(name) {
@@ -599,7 +645,7 @@
             document.getElementById('chatContainer').innerHTML = '';
             // 显示正在加载提示（可选）
             safeAddMessage('bot', `🔄 正在切换到 ${name}...`);
-            
+
             await loadHistory();
         }
 
@@ -609,15 +655,15 @@
 
             try {
                 const response = await fetch(`http://localhost:8111/chat/history?session_id=${sid}`);
-                
+
                 if (response.ok) {
                     const data = await response.json();
                     const history = data.history || [];
-                    
+
                     // 清空“正在切换”的提示，重新渲染完整历史
                     const container = document.getElementById('chatContainer');
                     if (container) container.innerHTML = '';
-                    
+
                     if (history.length === 0) {
                         // 如果没有历史，显示默认欢迎语
                         safeAddMessage('bot', `你好！我是你的 ${document.getElementById('currentExp').innerText} 实验助教。有什么问题吗？`);
@@ -654,7 +700,7 @@
 
             const div = document.createElement('div');
             div.className = `message ${role}`;
-            
+
             let formattedText = text || '';
             try {
                 // 确保 marked 可用且 text 是字符串
@@ -667,7 +713,7 @@
                 console.warn("Markdown parsing failed, fallback to plain text", e);
                 formattedText = String(text || '').replace(/\n/g, '<br>');
             }
-            
+
             div.innerHTML = `
                 <div class="avatar">${role === 'bot' ? '🤖' : '👨‍🎓'}</div>
                 <div class="bubble">${formattedText}</div>
@@ -683,7 +729,7 @@
             const input = document.getElementById('userInput');
             const btn = document.getElementById('sendBtn');
             const text = input.value.trim();
-            
+
             if (!text) return;
 
             const sid = getSessionId();
@@ -698,34 +744,98 @@
             input.value = '';
             input.disabled = true;
             btn.disabled = true;
-            btn.innerText = '思考中...';
+            btn.innerText = '接收中...';
+
+            // 创建机器人回复气泡（用于流式接收）
+            const container = document.getElementById('chatContainer');
+            const botDiv = document.createElement('div');
+            botDiv.className = `message bot`;
+            botDiv.innerHTML = `
+                <div class="avatar">🤖</div>
+                <div class="bubble">
+                    <div class="status-msg" id="streamStatus">请求已发送...</div>
+                    <div class="content" id="streamContent"></div>
+                </div>
+            `;
+            container.appendChild(botDiv);
+            container.scrollTop = container.scrollHeight;
+
+            const statusEl = botDiv.querySelector('#streamStatus');
+            const contentEl = botDiv.querySelector('#streamContent');
+            let fullMarkdown = "";
 
             try {
-                // 指向后端 8111 端口
-                const response = await fetch('http://localhost:8111/chat', {
+                // 指向后端 8111 端口，改用 /chat/stream
+                const response = await fetch('http://localhost:8111/chat/stream', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        session_id: sid, 
+                        session_id: sid,
                         query: text
                     })
                 });
 
-                if (response.ok) {
-                    const data = await response.json();
-                    safeAddMessage('bot', data.reply);
-                } else {
-                    safeAddMessage('bot', '❌ 服务器错误，请稍后再试。');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder('utf-8');
+                let buffer = "";
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split('\n');
+
+                    // 保留最后一行未完整的 JSON（如果网络拆包的话）
+                    buffer = lines.pop();
+
+                    for (const line of lines) {
+                        if (!line.trim()) continue;
+
+                        try {
+                            const data = JSON.parse(line);
+                            if (data.type === 'status') {
+                                statusEl.innerText = data.content;
+                            } else if (data.type === 'chunk') {
+                                // 隐藏状态栏（如果开始输出了）
+                                if (fullMarkdown.length === 0) {
+                                    statusEl.style.display = 'none';
+                                }
+                                fullMarkdown += data.content;
+
+                                // 增量渲染 Markdown
+                                if (typeof marked !== 'undefined') {
+                                    contentEl.innerHTML = marked.parse(fullMarkdown);
+                                } else {
+                                    contentEl.innerHTML = fullMarkdown.replace(/\n/g, '<br>');
+                                }
+                                container.scrollTop = container.scrollHeight;
+                            } else if (data.type === 'done') {
+                                statusEl.style.display = 'none';
+                            }
+                        } catch (e) {
+                            console.error("解析 JSON 失败:", line, e);
+                        }
+                    }
                 }
             } catch (error) {
-                safeAddMessage('bot', `❌ 网络错误: ${error.message}`);
+                statusEl.innerText = "";
+                contentEl.innerHTML = `❌ 网络或服务错误: ${error.message}`;
             } finally {
                 input.disabled = false;
                 btn.disabled = false;
                 btn.innerText = '发送';
                 input.focus();
+
+                // 确保滚动到底部
+                container.scrollTop = container.scrollHeight;
             }
         }
     </script>
 </body>
+
 </html>

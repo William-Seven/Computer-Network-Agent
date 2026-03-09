@@ -12,6 +12,8 @@ python-dotenv
 # 向量数据库与 Embeddings
 chromadb
 openai
+rank_bm25
+jieba
 
 # 文档处理
 pypdf
