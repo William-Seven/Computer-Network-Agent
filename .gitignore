@@ -5,6 +5,7 @@ data/assets
 data/vector_store/
 data/sessions/
 data/*.json
+data/*.pkl
 
 .env
 
