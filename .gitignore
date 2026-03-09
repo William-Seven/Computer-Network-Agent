@@ -7,3 +7,10 @@ data/sessions/
 data/*.json
 
 .env
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
