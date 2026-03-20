@@ -6,6 +6,7 @@
 
 - **📚 多格式 RAG 问答**：支持 Markdown、PDF、Word、PPT 多种格式文档的解析与智能切分，让知识库构建更加灵活无缝。
 - **🔍 混合检索 (Hybrid Search)**：引入 **结巴(Jieba)分词** 配合 **BM25 精细词频** 引擎，与大模型的高维 Vector 检索引擎相辅相成。通过 RRF (Reciprocal Rank Fusion) 倒数排序融合算法，大幅提升双路召回机制在中文长短语境下的匹配准确率。
+- **🎯 二阶段精排 (Cross-Encoder Rerank)**：在 RRF 粗排之后截流 Top-15 候选集，本地挂载部署 `BAAI/bge-reranker` 交叉编码器进行深度字级语义注意力打分，最终提纯出极高相关度的 Top-4 交由 LLM，根治专有名词的“知识幻觉”与“中间遗忘”。
 - **👁️ 多模态视觉感知**：自动从 PDF 中提取图片并进行向量化，Agent 能够结合图片内容（如网络拓扑图、实验结果截图）回答问题。
 - **🌐 智能联网搜索**：内置 Tool Calling 工具调用机制并实现容错解析以应对裸 JSON 输出异常。当本地实验指导书知识库无法命中或涉及前沿资讯时，Agent 会自动调用 DuckDuckGo 搜索引擎获取最新网络数据补充解答。
 - **🌊 流式输出与状态感知**：全面支持基于 Server-Sent Events (SSE) 的流式响应。前端实时显示 Agent "正在加载历史"、"执行混合检索(Vector + BM25)"、"正在调用外部工具: internet_search" 等思考内部状态，最终以打字机效果流畅呈现，消除首字节焦虑等待体验。
@@ -22,7 +23,7 @@
 - **后端服务**: FastAPI (Port 8111)
 - **认证模块**: AuthManager (SHA256 加密)
 - **前端架构**: 原生 HTML/JS SPA
-- **检索数据库**: ChromaDB (Vector) + rank_bm25 (Inverted Index)
+- **检索数据库**: ChromaDB (Vector) + rank_bm25 (Inverted Index) + bge-reranker
 - **数据存储**: 
   - `data/sessions/`: 对话历史 (*.json)
   - `data/users.json`: 用户账户信息
@@ -125,11 +126,16 @@ cn-agent/
 - [x] 多实验上下文隔离 (基于学号+实验ID)
 - [x] 前端 Markdown 渲染与代码高亮
 - [x] 后端性能优化 (MemoryManager 解耦)
+- [x] 彻底解决前后端分离导致的异域跨域端口痛点，集成 StaticFiles 静态代理
+- [x] 修复长后端守护进程使用 `nohup` 时的日志缓存卡死问题 (`-u` Unbuffered IO)
 - [x] **多模态支持** (自动提取并理解文档插图)
 - [x] **智能联网搜索整合** (Agent Tool Calling 动态调用 DuckDuckGo 获取最新知识)
 - [x] **流式输出体验升级** (实时状态提示与打字机回复呈现，大幅降低请求超时假死等待时长)
-- [x] **双语 Hybrid 混合检索** (引入结巴分词 `jieba` 与 `BM25` 精准词频检索，结合纯语义 Vector 向量，基于 RRF 倒数融合算法提升中文语境多路长短本文的命中准确率)
+- [x] **双路混合检索召回** (引入结巴分词 `Jieba` 与 `BM25` 精准词频检索，结合超高维纯语义 Vector 向量，采用 RRF 倒数融合算法大幅提升中文复杂混淆语境下长短本召回率)
+- [x] **二阶段深度神经网络精排架构** (加载国内环境加速优化后的 `BAAI/bge-reranker-v2-m3`。以“扩大粗排池Top-15 -> 深度注意打分 -> 提纯压至最终Top-4”黄金配比解决语言模型常见 Lost in the Middle 记忆遗忘问题)
 
 # 📝 TODO
 - 辅导配置步骤+原理讲解，详细讲解，最后补充引申
 - 迁移至关系型数据库 (mysql)
+- 各功能 功能栏
+- 图片输入
