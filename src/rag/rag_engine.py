@@ -8,6 +8,7 @@ import os
 import base64
 import pickle
 import sys
+from sentence_transformers import CrossEncoder
 
 # 显式导入自定义结巴分词模块，确保 pickle 反序列化时能找到命名空间
 try:
@@ -109,12 +110,26 @@ class RAGEngine:
                 print("⚠️ 未找到 BM25 索引文件，将退化为纯向量检索。")
                 self.bm25_retriever = None
 
+
+            try:
+                print("🚀 正在加载 BGE-Reranker 模型到显存...")
+                model_path = "/root/autodl-tmp/cn-agent/models/bge-reranker-v2-m3"
+                if os.path.exists(model_path):
+                    self.reranker = CrossEncoder(model_path, max_length=2048, device="cuda")
+                    print("✅ BGE-Reranker 加载成功！")
+                else:
+                    self.reranker = None
+                    print("⚠️ BGE-Reranker 模型目录不存在，已跳过精排阶段。")
+            except Exception as e:
+                self.reranker = None
+                print(f"⚠️ BGE-Reranker 加载失败: {e}")
+
         except Exception as e:
             print(f"⚠️ RAG Engine 初始化失败: {e}")
             self.vector_store = None
             self.bm25_retriever = None
 
-    def retrieve(self, query: str, top_k: int = 3) -> str:
+    def retrieve(self, query: str, top_k1: int = 20, top_k2: int = 4) -> str:
         if not self.vector_store:
             return "【系统提示】知识库未初始化，无法检索。"
         try:
@@ -125,10 +140,10 @@ class RAGEngine:
                 # 1. 向量检索召回
                 print("🧪 正在执行混合检索(Vector + BM25)...")
                 query_embedding = self.embedding.embed_query(query)
-                vector_docs = self.vector_store.similarity_search_by_vector(query_embedding, k=top_k)
+                vector_docs = self.vector_store.similarity_search_by_vector(query_embedding, k=top_k1)
                 
                 # 2. BM25 关键词检索召回
-                self.bm25_retriever.k = top_k
+                self.bm25_retriever.k = top_k1
                 bm25_docs = self.bm25_retriever.invoke(query)
                 
                 # 3. RRF (Reciprocal Rank Fusion) 倒数排序融合算法
@@ -157,22 +172,44 @@ class RAGEngine:
                         source_tracker[text] = "BM25"
                     
                 # 根据 RRF 得分降序排序
-                sorted_docs = sorted(doc_map.values(), key=lambda doc: rrf_scores[doc.page_content], reverse=True)
-                docs = sorted_docs[:top_k]
+                sorted_docs_rrf = sorted(doc_map.values(), key=lambda doc: rrf_scores[doc.page_content], reverse=True)
+                # ------ 引入 BGE 重排 ------
+                if getattr(self, "reranker", None) is not None:
+                    print("📉 正在执行 BGE-Reranker 二阶段重排...")
+                    # 扩大初筛数量交由 Reranker 排序 (取 RRF 的 Top-15)
+                    candidate_docs = sorted_docs_rrf[:15]
+                    # 构造交叉编码 (Cross-Encoding) 必须的数据对： [[问题, 文档1], [问题, 文档2]...]
+                    pairs = [[query, doc.page_content] for doc in candidate_docs]
+                    # 这就是该模型的核心能力：打分！(范围通常在极低的负数到几十以内的正数之间，分越高代表越完美匹配)
+                    scores = self.reranker.predict(pairs)
+                    # 捆绑分数和文档
+                    scored_docs = list(zip(candidate_docs, scores))
+                    scored_docs.sort(key=lambda x: x[1], reverse=True)
+                    # 最后我们只需要最开始要求的 top_k (一般是4个)
+                    docs = [doc for doc, _ in scored_docs[:top_k2]]
+                    
+                    print("--- 🏆 重排 (Reranker) 最终得分详情 ---")
+                    for i, (doc, score) in enumerate(scored_docs[:top_k2]):
+                        source = source_tracker[doc.page_content]
+                        snip = doc.page_content.replace("\n", " ")[:50]
+                        print(f"TOP {i+1} | Source: {source: <18} | Cross-Score: {score:.5f} | Snippet: {snip}...")
+                    print("----------------------------------------")
+                else:
+                    docs = sorted_docs_rrf[:top_k2]
                 
-                print("--- 🏆 混合检索 (RRF) 最终得分详情 ---")
-                for i, doc in enumerate(docs):
-                    score = rrf_scores[doc.page_content]
-                    source = source_tracker[doc.page_content]
-                    snip = doc.page_content.replace('\n', ' ')[:50]
-                    print(f"TOP {i+1} | Source: {source: <18} | Score: {score:.5f} | Snippet: {snip}...")
-                print("----------------------------------------")
+                    print("--- 🏆 混合检索 (RRF) 最终得分详情 ---")
+                    for i, doc in enumerate(docs):
+                        score = rrf_scores[doc.page_content]
+                        source = source_tracker[doc.page_content]
+                        snip = doc.page_content.replace('\n', ' ')[:50]
+                        print(f"TOP {i+1} | Source: {source: <18} | Score: {score:.5f} | Snippet: {snip}...")
+                    print("----------------------------------------")
                 
             else:
                 # 降级：仅使用纯向量检索
                 print("🧪 正在执行纯向量检索...")
                 query_embedding = self.embedding.embed_query(query)
-                docs = self.vector_store.similarity_search_by_vector(query_embedding, k=top_k)
+                docs = self.vector_store.similarity_search_by_vector(query_embedding, k=top_k2)
 
             if not docs:
                 return "【系统提示】未检索到相关文档。"

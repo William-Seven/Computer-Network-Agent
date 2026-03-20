@@ -14,7 +14,7 @@ echo "📝 检查知识库..."
 
 # 4. 启动后端 API (Port 8111)
 echo "🚀 启动后端 API (Port 8111)..."
-nohup python3 src/api/main.py > ./logs/backend.log 2>&1 &
+nohup python3 -u src/api/main.py > ./logs/backend.log 2>&1 &
 BACKEND_PID=$!
 echo "✅ 后端 PID: $BACKEND_PID"
 

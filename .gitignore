@@ -21,3 +21,6 @@ __pycache__/
 
 # 测试脚本
 test/
+
+# 模型文件
+models/

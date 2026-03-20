@@ -10,6 +10,7 @@ uvicorn
 python-dotenv
 
 # 向量数据库与 Embeddings
+sentence-transformers
 chromadb
 openai
 rank_bm25
@@ -25,3 +26,5 @@ python-pptx
 # 搜索引擎
 duckduckgo-search
 ddgs
+
+# bge-reranker

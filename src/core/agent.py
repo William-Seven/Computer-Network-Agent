@@ -68,7 +68,7 @@ class CoreAgent:
         yield _yield_data("status", "正在执行混合检索(Vector + BM25)...")
         print(f"🤖 Agent 思考中: {user_query}")
         
-        context = self.rag.retrieve(user_query, 4)
+        context = self.rag.retrieve(user_query, 20, 4)
         print(f"【检索结果预览】：{context[:500]}...") 
         
         yield _yield_data("status", f"混合检索完成，已获取 {context.count('[文档片段')} 条相关上下文片段。")

@@ -21,7 +21,7 @@
 - **Agent 框架**: LangChain (ReAct / OpenAI Functions)
 - **后端服务**: FastAPI (Port 8111)
 - **认证模块**: AuthManager (SHA256 加密)
-- **前端架构**: 原生 HTML/JS SPA (Port 8222)
+- **前端架构**: 原生 HTML/JS SPA
 - **检索数据库**: ChromaDB (Vector) + rank_bm25 (Inverted Index)
 - **数据存储**: 
   - `data/sessions/`: 对话历史 (*.json)
