@@ -131,7 +131,7 @@ def ingest_docs():
     print(f"📄 加载了 {len(documents)} 个文档")
 
     # 2. 文本切分
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=800, chunk_overlap=200)
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=300)
     splits = text_splitter.split_documents(documents)
     print(f"✂️ 切分为 {len(splits)} 个文本块")
 

@@ -21,7 +21,7 @@ echo "✅ 后端 PID: $BACKEND_PID"
 # 5. 启动前端 UI (Port 8222)
 echo "🚀 启动前端静态服务 (Port 8222)..."
 cd src/ui/static
-nohup python3 -m http.server 8222 > ../../../logs/frontend.log 2>&1 &
+# nohup python3 -m http.server 8222 > ../../../logs/frontend.log 2>&1 &
 FRONTEND_PID=$!
 cd ../../../
 echo "✅ 前端 PID: $FRONTEND_PID"
@@ -29,6 +29,6 @@ echo "✅ 前端 PID: $FRONTEND_PID"
 # 6. 完成
 echo ""
 echo "🎯 系统启动完成！"
-echo "🌐 前端访问: http://localhost:8222"
+echo "🌐 前端访问: http://localhost:8111"
 echo "🔌 后端接口: http://localhost:8111"
 echo "📊 日志查看: tail -f backend.log"

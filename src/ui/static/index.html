@@ -562,7 +562,7 @@
             if (!id || !pwd) return showAuthError("请填写完整信息");
 
             try {
-                const res = await fetch('http://localhost:8111/auth/login', {
+                const res = await fetch('/auth/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ student_id: id, password: pwd })
@@ -590,7 +590,7 @@
             if (!pwd1) return showAuthError("密码不能为空");
 
             try {
-                const res = await fetch('http://localhost:8111/auth/register', {
+                const res = await fetch('/auth/register', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ student_id: id, password: pwd1 })
@@ -690,7 +690,7 @@
             if (!ok) return;
 
             try {
-                const response = await fetch(`http://localhost:8111/chat/history?session_id=${encodeURIComponent(sid)}`, {
+                const response = await fetch(`/chat/history?session_id=${encodeURIComponent(sid)}`, {
                     method: 'DELETE'
                 });
                 const data = await response.json();
@@ -712,7 +712,7 @@
             if (!sid) return;
 
             try {
-                const response = await fetch(`http://localhost:8111/chat/history?session_id=${sid}`);
+                const response = await fetch(`/chat/history?session_id=${sid}`);
 
                 if (response.ok) {
                     const data = await response.json();
@@ -824,7 +824,7 @@
 
             try {
                 // 指向后端 8111 端口，改用 /chat/stream
-                const response = await fetch('http://localhost:8111/chat/stream', {
+                const response = await fetch('/chat/stream', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({

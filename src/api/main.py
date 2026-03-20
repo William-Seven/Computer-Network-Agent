@@ -18,9 +18,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/")
-def read_root():
-    return {"status": "running", "message": "CN-Agent Backend API (Port 8111)"}
+# @app.get("/")
+# def read_root():
+#    return {"status": "running", "message": "CN-Agent Backend API (Port 8111)"}
 
 # 模拟一个全局的 session 存储，实际生产中应管理多个 session 实例
 # 这里简单起见，每次请求都新建或获取同一个 agent 实例
@@ -112,6 +112,14 @@ def clear_history(session_id: str):
         return {"status": "success", "message": f"Session {session_id} history file deleted (agent was not active)."}
     except Exception as e:
         return {"status": "error", "message": f"Failed to clear history: {str(e)}"}
+
+from fastapi.staticfiles import StaticFiles
+
+import os
+
+static_path = os.path.join(os.path.dirname(__file__), "..", "ui", "static")
+
+app.mount("/", StaticFiles(directory=static_path, html=True), name="static")
 
 if __name__ == "__main__":
     import uvicorn
