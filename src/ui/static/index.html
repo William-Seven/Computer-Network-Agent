@@ -501,13 +501,47 @@
             </div>
         </div>
 
-        <div class="input-area">
+        <div class="input-area" style="align-items: center;">
+            <input type="file" id="imageInput" accept="image/*" style="display: none;"
+                onchange="handleImageSelect(event)">
+            <button onclick="document.getElementById('imageInput').click()" id="uploadImgBtn" title="上传图片"
+                style="background: none; border: none; font-size: 2.2rem; cursor: pointer; padding: 0 10px; color: #64748b; line-height: 1;">+</button>
+            <div id="imagePreviewContainer"
+                style="display:none; position:relative; align-items:center; margin-right: 10px;">
+                <img id="imagePreview"
+                    style="height: 48px; width: auto; max-width: 100px; object-fit: cover; border-radius: 4px; border: 1px solid #cbd5e1;">
+                <span onclick="removeImage()"
+                    style="position: absolute; top:-8px; right:-8px; background: #ef4444; color:white; border-radius: 50%; width: 18px; height: 18px; font-size: 12px; cursor: pointer; text-align: center; line-height: 18px; font-weight: bold;">×</span>
+            </div>
             <input type="text" id="userInput" placeholder="输入你的问题，例如：如何配置 VLAN？" onkeypress="handleKeyPress(event)">
             <button onclick="sendMessage()" id="sendBtn">发送</button>
         </div>
     </div>
 
     <script>
+        // === 图片上传逻辑 ===
+        let currentImageData = null;
+
+        function handleImageSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                currentImageData = e.target.result;
+                document.getElementById('imagePreview').src = currentImageData;
+                document.getElementById('imagePreviewContainer').style.display = 'flex';
+                document.getElementById('uploadImgBtn').style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removeImage() {
+            currentImageData = null;
+            document.getElementById('imageInput').value = '';
+            document.getElementById('imagePreviewContainer').style.display = 'none';
+            document.getElementById('uploadImgBtn').style.display = 'block';
+        }
+
         // 侧边栏切换逻辑
         function toggleSidebar() {
             const sidebar = document.querySelector('.sidebar');
@@ -788,7 +822,7 @@
             const btn = document.getElementById('sendBtn');
             const text = input.value.trim();
 
-            if (!text) return;
+            if (!text && !currentImageData) return;
 
             const sid = getSessionId();
             if (!sid) {
@@ -798,8 +832,17 @@
             }
 
             // UI 更新
-            safeAddMessage('user', text);
+            let displayHtml = text;
+            if (currentImageData) {
+                displayHtml = `<img src="${currentImageData}" style="max-width: 200px; border-radius: 8px; margin-bottom: 8px; display: block;">` + displayHtml;
+            }
+            safeAddMessage('user', displayHtml);
+
+            const payloadImageData = currentImageData; // closure storage for fetch
+
+            // reset UI
             input.value = '';
+            removeImage();
             input.disabled = true;
             btn.disabled = true;
             btn.innerText = '接收中...';
@@ -823,13 +866,14 @@
             let fullMarkdown = "";
 
             try {
-                // 指向后端 8111 端口，改用 /chat/stream
+                // 指向后端 6006 端口，改用 /chat/stream
                 const response = await fetch('/chat/stream', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         session_id: sid,
                         query: text
+                        , image_data: payloadImageData
                     })
                 });
 

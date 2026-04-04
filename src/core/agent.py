@@ -52,7 +52,7 @@ class CoreAgent:
             print(f"⚠️ 图片读取失败 {image_path}: {e}")
             return None
 
-    def chat_stream(self, user_query: str):
+    def chat_stream(self, user_query: str, image_data: str = None):
         import json
         
         def _yield_data(type_str, content):
@@ -105,6 +105,14 @@ class CoreAgent:
                     content_parts.append({
                         "type": "image_url",
                         "image_url": {"url": f"data:image/jpeg;base64,{b64_img}"}
+                    })
+                
+                # Append user uploaded image if any
+                if image_data:
+                    url = image_data if image_data.startswith("data:image/") else f"data:image/jpeg;base64,{image_data}"
+                    content_parts.append({
+                        "type": "image_url",
+                        "image_url": {"url": url}
                     })
 
                 messages = [
@@ -167,6 +175,14 @@ class CoreAgent:
                         content_parts_new.append({
                             "type": "image_url",
                             "image_url": {"url": f"data:image/jpeg;base64,{b64_img}"}
+                        })
+                        
+                    # Append user uploaded image if any
+                    if image_data:
+                        url = image_data if image_data.startswith("data:image/") else f"data:image/jpeg;base64,{image_data}"
+                        content_parts_new.append({
+                            "type": "image_url",
+                            "image_url": {"url": url}
                         })
                         
                     flat_messages = [

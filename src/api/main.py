@@ -20,7 +20,7 @@ app.add_middleware(
 
 # @app.get("/")
 # def read_root():
-#    return {"status": "running", "message": "CN-Agent Backend API (Port 8111)"}
+#    return {"status": "running", "message": "CN-Agent Backend API (Port 6006)"}
 
 # 模拟一个全局的 session 存储，实际生产中应管理多个 session 实例
 # 这里简单起见，每次请求都新建或获取同一个 agent 实例
@@ -30,6 +30,7 @@ agents = {}
 class ChatRequest(BaseModel):
     session_id: str
     query: str
+    image_data: str = None
 
 class AuthRequest(BaseModel):
     student_id: str
@@ -72,7 +73,7 @@ def chat_stream_endpoint(request: ChatRequest):
     
     # 返回类型设置为 text/event-stream 或 application/x-ndjson
     return StreamingResponse(
-        agent.chat_stream(request.query),
+        agent.chat_stream(request.query, image_data=request.image_data),
         media_type="application/x-ndjson"
     )
 
@@ -123,5 +124,5 @@ app.mount("/", StaticFiles(directory=static_path, html=True), name="static")
 
 if __name__ == "__main__":
     import uvicorn
-    # 明确绑定端口 8111
+    # 明确绑定端口 6006
     uvicorn.run(app, host="0.0.0.0", port=6006)
