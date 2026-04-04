@@ -121,7 +121,21 @@ class CoreAgent:
                 ]
 
                 yield _yield_data("status", "模型思考中...")
-                response_msg = self.llm_with_tools.invoke(messages)
+                response_msg = None
+                is_tool_call_stream = False
+                
+                for chunk in self.llm_with_tools.stream(messages):
+                    if response_msg is None:
+                        response_msg = chunk
+                    else:
+                        response_msg += chunk
+                        
+                    if getattr(chunk, "tool_call_chunks", []):
+                        is_tool_call_stream = True
+                        
+                    if chunk.content and not is_tool_call_stream:
+                        full_response += chunk.content
+                        yield _yield_data("chunk", chunk.content)
 
                 parsed_tool_calls = []
                 content_text = response_msg.content or ""
@@ -191,12 +205,6 @@ class CoreAgent:
                     ]
 
                     for chunk in self.llm.stream(flat_messages):
-                        if chunk.content:
-                            full_response += chunk.content
-                            yield _yield_data("chunk", chunk.content)
-                            
-                else:
-                    for chunk in self.llm.stream(messages):
                         if chunk.content:
                             full_response += chunk.content
                             yield _yield_data("chunk", chunk.content)

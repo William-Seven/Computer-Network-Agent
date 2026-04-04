@@ -6,6 +6,7 @@ logs/
 data/assets
 data/vector_store/
 data/sessions/
+data/summaries/
 data/*.json
 data/*.pkl
 

@@ -30,11 +30,36 @@ agents = {}
 class ChatRequest(BaseModel):
     session_id: str
     query: str
-    image_data: str = None
+    image_data: str | None = None
 
 class AuthRequest(BaseModel):
     student_id: str
     password: str
+
+class SummaryRequest(BaseModel):
+    student_id: str
+
+from src.core.summary import SummaryManager
+summary_manager = SummaryManager()
+
+@app.get("/summary/{student_id}")
+def get_summaries(student_id: str):
+    """
+    获取学生的历史总结记录
+    """
+    records = summary_manager.get_summaries(student_id)
+    return {"success": True, "data": records}
+
+@app.post("/summary/generate")
+def generate_summary(request: SummaryRequest):
+    """
+    根据学生的所有实验对话记录生成一份新的问题总结
+    """
+    try:
+        new_record = summary_manager.generate_summary(request.student_id)
+        return {"success": True, "data": new_record}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/auth/register")
