@@ -124,4 +124,4 @@ app.mount("/", StaticFiles(directory=static_path, html=True), name="static")
 if __name__ == "__main__":
     import uvicorn
     # 明确绑定端口 8111
-    uvicorn.run(app, host="0.0.0.0", port=8111)
+    uvicorn.run(app, host="0.0.0.0", port=6006)
