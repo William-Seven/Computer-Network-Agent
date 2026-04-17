@@ -39,8 +39,25 @@ class AuthRequest(BaseModel):
 class SummaryRequest(BaseModel):
     student_id: str
 
+class TopologyRequest(BaseModel):
+    topology_text: str
+
 from src.core.summary import SummaryManager
+from src.core.topology import TopologyAnalyzer
+
 summary_manager = SummaryManager()
+topology_analyzer = TopologyAnalyzer()
+
+@app.post("/topology/analyze")
+def analyze_topology(request: TopologyRequest):
+    """
+    接收前端发送的动态拓扑脚本进行可视化分析并生成体检报告
+    """
+    try:
+        content = topology_analyzer.analyze(request.topology_text)
+        return {"success": True, "content": content}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/summary/{student_id}")
 def get_summaries(student_id: str):
